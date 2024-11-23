@@ -10,35 +10,98 @@ exports.getCourses = async (req, res) => {
   }
 };
 
-
 exports.addCourse = async (req, res) => {
-    const { title, duration, description, category, rating, learners } = req.body;
+  const {
+    course_title,
+    course_images,
+    url,
+    price,
+    num_lectures,
+    level,
+    rating,
+    content_duration,
+    published_date,
+    subject,
+    course_content,
+  } = req.body;
 
-  
-  if (rating && (rating < 0 || rating > 5)) {
-    return res.status(400).json({ message: 'Rating must be between 0 and 5' });
+  if (rating < 0 || rating > 1) {
+    return res.status(400).json({ message: 'Rating must be between 0 and 1' });
   }
 
-  if (learners && learners < 0) {
-    return res.status(400).json({ message: 'Learners cannot be a negative number' });
+  if (price < 0) {
+    return res.status(400).json({ message: 'Price cannot be negative' });
+  }
+
+  if (num_lectures && num_lectures <= 0) {
+    return res.status(400).json({ message: 'Number of lectures must be greater than zero' });
+  }
+
+
+  if (published_date) {
+    const dateParts = published_date.split('T');
+    if (dateParts.length !== 2) {
+      return res.status(400).json({
+        message: 'Published date must be in the format YYYY-MM-DDTHH:mm',
+      });
+    }
+
+    const [date, time] = dateParts;
+    const dateSegments = date.split('-');
+    const timeSegments = time.split(':');
+
+    if (
+      dateSegments.length !== 3 ||
+      timeSegments.length !== 2 ||
+      isNaN(dateSegments[0]) || 
+      isNaN(dateSegments[1]) || 
+      isNaN(dateSegments[2]) || 
+      isNaN(timeSegments[0]) || 
+      isNaN(timeSegments[1])    
+    ) {
+      return res.status(400).json({
+        message: 'Published date must be in the format YYYY-MM-DDTHH:mm',
+      });
+    }
+
+    const [year, month, day] = dateSegments.map(Number);
+    const [hour, minute] = timeSegments.map(Number);
+
+    if (
+      year < 1 || 
+      month < 1 || month > 12 ||
+      day < 1 || day > 31 || 
+      hour < 0 || hour > 23 ||
+      minute < 0 || minute > 59
+    ) {
+      return res.status(400).json({
+        message: 'Published date contains invalid values',
+      });
+    }
   }
 
   try {
-    const existingCourse = await Course.findOne({ title });
+    const existingCourse = await Course.findOne({ course_title });
     if (existingCourse) {
-      return res.status(400).json({ message: 'Course with this title already exists' });
+      return res.status(400).json({ message: 'A course with this title already exists' });
     }
 
     const course = new Course({
-      title,
-      duration,
-      description,
-      category,
-      rating: rating || 0, 
-      learners: learners || 0, 
+      course_title,
+      course_images,
+      url,
+      price,
+      num_lectures,
+      level,
+      rating,
+      content_duration,
+      published_date, 
+      subject,
+      course_content,
     });
 
     await course.save();
+
     res.status(201).json({
       message: 'Course added successfully',
       course,
@@ -46,8 +109,8 @@ exports.addCourse = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-       
 };
+
 
 
 
