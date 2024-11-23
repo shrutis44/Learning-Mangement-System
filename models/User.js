@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
     dateOfBirth: { type: Date, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+   // description: { type: String },
     enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
 });
 
