@@ -12,7 +12,7 @@ exports.getCourses = async (req, res) => {
 
 exports.addCourse = async (req, res) => {
   const {
-    course_title,
+    title,
     course_images,
     url,
     price,
@@ -81,13 +81,13 @@ exports.addCourse = async (req, res) => {
   }
 
   try {
-    const existingCourse = await Course.findOne({ course_title });
+    const existingCourse = await Course.findOne({ title });
     if (existingCourse) {
-      return res.status(400).json({ message: 'A course with this title already exists' });
+     return res.status(400).json({ message: 'A course with this title already exists' });
     }
 
     const course = new Course({
-      course_title,
+      title,
       course_images,
       url,
       price,
@@ -181,17 +181,17 @@ exports.toggleEnrollment = async (req, res) => {
     }
   };
   
-  
-  
-exports.rateCourse = async (req, res) => {
-    const { title, rating } = req.body; 
-    const userId = req.user._id; 
+
+
+  exports.rateCourse = async (req, res) => {
+    const { title, rating } = req.body;
+    const userId = req.user._id;
   
     if (!title) {
       return res.status(400).json({ message: 'Course title is required' });
     }
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    if (rating < 0 || rating > 1) {
+      return res.status(400).json({ message: 'Rating must be between 0 and 1' });
     }
   
     try {
@@ -200,12 +200,20 @@ exports.rateCourse = async (req, res) => {
         return res.status(404).json({ message: 'Course not found' });
       }
   
-      const existingRating = course.ratings.find(r => r.user.toString() === userId.toString());
+      
+      if (!course.ratings) {
+        course.ratings = [];
+      }
+  
+      const existingRating = course.ratings.find(
+        (r) => r.user.toString() === userId.toString()
+      );
   
       if (existingRating) {
         existingRating.score = rating;
       } else {
         course.ratings.push({ user: userId, score: rating });
+        course.num_reviews += 1;
       }
   
       const totalRatings = course.ratings.reduce((acc, r) => acc + r.score, 0);
@@ -215,8 +223,11 @@ exports.rateCourse = async (req, res) => {
   
       res.status(200).json({ message: 'Rating updated successfully', rating: course.rating });
     } catch (err) {
-      console.error(err); 
-      res.status(500).json({ message: err.message });
+      console.error(err);
+      res.status(500).json({ message: 'An error occurred', error: err.message });
     }
   };
+  
+
+
   
