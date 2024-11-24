@@ -14,6 +14,8 @@ const CourseSchema = new mongoose.Schema({
   published_date: { type: String, required: true },
   subject: { type: String, required: true },
   course_content: { type: String }, 
+  enrolledUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  learners: { type: Number, default: 0 },
 });
 
 module.exports = mongoose.model('Course', CourseSchema);

@@ -23,6 +23,7 @@ exports.addCourse = async (req, res) => {
     published_date,
     subject,
     course_content,
+    learners,
   } = req.body;
 
   if (rating < 0 || rating > 1) {
@@ -31,6 +32,11 @@ exports.addCourse = async (req, res) => {
 
   if (price < 0) {
     return res.status(400).json({ message: 'Price cannot be negative' });
+  }
+
+
+  if (learners && learners < 0) {
+    return res.status(400).json({ message: 'Learners cannot be a negative number' });
   }
 
   if (num_lectures && num_lectures <= 0) {
@@ -98,6 +104,7 @@ exports.addCourse = async (req, res) => {
       published_date, 
       subject,
       course_content,
+      learners: learners || 0, 
     });
 
     await course.save();
